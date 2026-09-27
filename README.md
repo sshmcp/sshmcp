@@ -405,6 +405,8 @@ Notes:
 
 The repository ships a tag-driven GitHub Actions workflow at [.github/workflows/release.yml](.github/workflows/release.yml).
 
+Workflow artifacts are named with the immutable commit SHA, for example `sshmcp-<commit SHA>-x86_64-unknown-linux-gnu`, and include an archive-specific SHA256 file. Tagged releases continue to publish the platform archives and combined `SHA256SUMS`.
+
 - Trigger: push a tag that matches `v*`
 - Build matrix: Windows x64 and Linux x64
 - Steps: checkout, install Rust stable, `cargo fmt --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --locked`, `cargo build --release --locked`, package artifacts, create GitHub Release, upload binaries plus `SHA256SUMS`

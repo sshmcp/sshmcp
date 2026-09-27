@@ -51,8 +51,9 @@ jobs:
       - name: Prepare package variables
         shell: bash
         run: |
-          PACKAGE="sshmcp-${GITHUB_REF_NAME}-${{ matrix.target }}"
+          PACKAGE="sshmcp-${GITHUB_SHA}-${{ matrix.target }}"
           echo "PACKAGE=${PACKAGE}" >> "$GITHUB_ENV"
+          echo "ARCHIVE_EXT=${{ matrix.archive_ext }}" >> "$GITHUB_ENV"
           echo "BIN_PATH=target/${{ matrix.target }}/release/${{ matrix.binary }}" >> "$GITHUB_ENV"
 
       - name: Stage package contents
@@ -75,12 +76,20 @@ jobs:
         run: |
           Compress-Archive -Path "dist/$env:PACKAGE/*" -DestinationPath "dist/$env:PACKAGE.zip" -Force
 
+      - name: Generate package checksum
+        shell: bash
+        run: |
+          (cd dist && sha256sum "${PACKAGE}.${ARCHIVE_EXT}" > "${PACKAGE}.${ARCHIVE_EXT}.sha256")
+
       - name: Upload packaged artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PACKAGE }}
-          path: dist/*.${{ matrix.archive_ext }}
+          path: |
+            dist/${{ env.PACKAGE }}.${{ matrix.archive_ext }}
+            dist/${{ env.PACKAGE }}.${{ matrix.archive_ext }}.sha256
           if-no-files-found: error
+          retention-days: 30
 
   release:
     name: publish-release
@@ -110,4 +119,5 @@ jobs:
           files: |
             dist/*.zip
             dist/*.tar.gz
+            dist/*.sha256
             dist/SHA256SUMS

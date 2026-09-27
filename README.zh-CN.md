@@ -375,6 +375,8 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
 
 仓库自带一个 tag 驱动的 GitHub Actions workflow：[.github/workflows/release.yml](.github/workflows/release.yml)。
 
+工作流产物使用不可变的 commit SHA 命名，例如 `sshmcp-<commit SHA>-x86_64-unknown-linux-gnu`，并附带该压缩包的 SHA256 文件。创建版本标签时仍会发布各平台压缩包及汇总的 `SHA256SUMS`。
+
 - 触发条件：推送匹配 `v*` 的 tag
 - 构建矩阵：Windows x64 和 Linux x64
 - 固定步骤：checkout、安装 Rust stable、`cargo fmt --check`、`cargo clippy --all-targets --all-features -- -D warnings`、`cargo test --locked`、`cargo build --release --locked`、打包产物、创建 GitHub Release、上传二进制和 `SHA256SUMS`

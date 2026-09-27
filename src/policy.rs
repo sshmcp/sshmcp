@@ -190,7 +190,26 @@ fn rule_matches(rule: &crate::config::PolicyRuleConfig, request: &Request) -> bo
         Request::Download { src, .. } => ("download", src.as_str(), &rule.matcher.paths),
         _ => return false,
     };
-    rule.matcher.operation == operation && patterns.iter().any(|p| wildcard_match(p, value))
+    rule.matcher.operation == operation
+        && patterns.iter().any(|pattern| {
+            wildcard_match(pattern, value)
+                && (operation != "exec"
+                    || matches!(rule.effect, PolicyEffectConfig::Deny)
+                    || !pattern.contains('*')
+                    || pattern == "*"
+                    || is_literal_command(value))
+        })
+}
+
+// Restricted globs may only match literal shell words. Fail closed on quoting,
+// expansion, redirection and compound commands rather than attempting to parse
+// every remote shell dialect. Exact commands and the explicit full-access '*'
+// remain administrator-authorized shell programs. Deny rules always match raw
+// text so this restriction cannot turn a deny into a fall-through allow.
+fn is_literal_command(command: &str) -> bool {
+    command
+        .bytes()
+        .all(|byte| byte.is_ascii_alphanumeric() || b" /._-:=,@%+".contains(&byte))
 }
 
 fn wildcard_match(pattern: &str, value: &str) -> bool {
@@ -411,6 +430,123 @@ profiles:
             .effect,
             PolicyEffect::Deny
         );
+    }
+
+    #[test]
+    fn read_rules_allow_selected_logs_and_reject_paths_outside_the_roots() {
+        let config: AppConfig = serde_yaml::from_str(r#"
+profiles:
+- name: helper
+  target: {host: example, user: root, auth: {type: password, password: secret}}
+  agent_policy:
+    capabilities: {read: true}
+    allowed_read_paths: [/etc/hostname, /etc/os-release, /var/log]
+    rules:
+    - {id: helper-read, match: {operation: read, paths: [/etc/hostname, /etc/os-release, /var/log, '/var/log/*']}, effect: allow}
+"#).unwrap();
+        let allowed = |path: &str| {
+            PolicyEngine::authorize(
+                &config,
+                CallerType::Mcp,
+                &Request::Read {
+                    profile: "helper".into(),
+                    path: path.into(),
+                },
+            )
+            .is_ok_and(|decision| decision.effect == PolicyEffect::Allow)
+        };
+        for path in [
+            "/etc/hostname",
+            "/etc/os-release",
+            "/var/log/app.log",
+            "/var/log/nginx/error.log",
+        ] {
+            assert!(allowed(path), "{path}");
+        }
+        for path in [
+            "/etc/shadow",
+            "/var/logger/app.log",
+            "/var/log/../../etc/shadow",
+        ] {
+            assert!(!allowed(path), "{path}");
+        }
+    }
+
+    #[test]
+    fn restricted_exec_globs_reject_shell_programs_without_weakening_denies() {
+        let mut config: AppConfig = serde_yaml::from_str(
+            r#"
+profiles:
+- name: test
+  target: {host: example, user: root, auth: {type: password, password: secret}}
+  agent_policy:
+    rules:
+    - {id: list, match: {operation: exec, commands: ['ls *']}, effect: allow}
+    - {id: restart, match: {operation: exec, commands: ['systemctl restart *']}, effect: confirm}
+"#,
+        )
+        .unwrap();
+        let decision = |config: &AppConfig, command: &str| {
+            PolicyEngine::authorize(
+                config,
+                CallerType::Mcp,
+                &Request::Exec {
+                    profile: "test".into(),
+                    command: command.into(),
+                    cwd: None,
+                    timeout_seconds: Some(30),
+                    env: vec![],
+                },
+            )
+            .unwrap()
+            .effect
+        };
+        assert_eq!(decision(&config, "ls -la /var/log"), PolicyEffect::Allow);
+        assert_eq!(
+            decision(&config, "systemctl restart nginx"),
+            PolicyEffect::Confirm
+        );
+        for suffix in [
+            "/; id",
+            "/ && id",
+            "/ || id",
+            "/ | sh",
+            "/ & id",
+            "/\nid",
+            "$(id)",
+            "`id`",
+            "/ > /tmp/output",
+            "<(id)",
+            "${HOME}",
+            "'$(id)'",
+            "\"$(id)\"",
+            "\\;id",
+            "/\r id",
+            "/\0id",
+            "*",
+            "~",
+            "[ab]",
+        ] {
+            assert_eq!(
+                decision(&config, &format!("ls {suffix}")),
+                PolicyEffect::Deny,
+                "{suffix}"
+            );
+            assert_eq!(
+                decision(&config, &format!("systemctl restart {suffix}")),
+                PolicyEffect::Deny,
+                "{suffix}"
+            );
+        }
+        // Explicit full access retains shell syntax, but an earlier deny still wins.
+        config.profiles[0].agent_policy.rules[0].effect = PolicyEffectConfig::Deny;
+        config.profiles[0].agent_policy.rules[1].matcher.commands = vec!["*".into()];
+        config.profiles[0].agent_policy.rules[1].effect = PolicyEffectConfig::Allow;
+        assert_eq!(decision(&config, "ls /; id"), PolicyEffect::Deny);
+        assert_eq!(decision(&config, "hostname && id"), PolicyEffect::Allow);
+        // An exact command can deliberately authorize shell composition.
+        config.profiles[0].agent_policy.rules[1].matcher.commands = vec!["hostname && id".into()];
+        assert_eq!(decision(&config, "hostname && id"), PolicyEffect::Allow);
     }
 
     #[test]

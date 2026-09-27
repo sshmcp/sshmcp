@@ -31,6 +31,8 @@ profiles:
 
 Rules run in order after capabilities and existing safety checks. With no rules, legacy exact `allowed_commands` and path behavior remains unchanged. An unmatched request in a non-empty ruleset is denied. Shell wrappers are not unwrapped; broad wrapper rules should not be used.
 
+Restricted command globs (for example `systemctl status *`) only allow literal ASCII words: letters, digits, spaces and `/._-:=,@%+`. Quoting, escapes, expansions, control characters, redirections and compound shell commands cannot match an `allow` or `confirm` glob. Exact command entries and the explicit full-access `*` still authorize shell syntax; deny rules continue matching raw text. This prevents shell composition bypasses, but operators must also restrict each program's arguments: a command glob is not a read-only guarantee.
+
 ## Workflow
 
 MCP returns `{"status":"confirmation_required","approval":{"id":"apr_...","profile":"production","operation":"exec","summary":"systemctl restart nginx","risk":"medium","expires_at":1780000000}}`. The agent must stop. A human then uses:

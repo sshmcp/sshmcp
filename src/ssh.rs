@@ -343,10 +343,7 @@ async fn authenticate(
     if success {
         Ok(())
     } else {
-        Err(ArrtError::Ssh(format!(
-            "authentication failed for {}@{}:{}",
-            endpoint.user, endpoint.host, endpoint.port
-        )))
+        Err(ArrtError::AuthenticationFailed)
     }
 }
 

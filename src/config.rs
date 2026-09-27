@@ -66,7 +66,9 @@ pub struct AgentPolicyConfig {
     pub allowed_read_paths: Vec<String>,
     #[serde(default)]
     pub allowed_write_paths: Vec<String>,
-    /// Exact shell command strings agents may execute. Empty denies agent exec.
+    /// Legacy exact shell command strings agents may execute. When `rules` is
+    /// non-empty and this list is empty, ordered command matchers supply the
+    /// command authorization.
     #[serde(default)]
     pub allowed_commands: Vec<String>,
     /// Deprecated insecure blacklist. Non-empty values fail validation.

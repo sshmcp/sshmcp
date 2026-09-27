@@ -51,7 +51,12 @@ jobs:
       - name: Prepare package variables
         shell: bash
         run: |
-          PACKAGE="sshmcp-${GITHUB_SHA}-${{ matrix.target }}"
+          version="${GITHUB_SHA}"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="$GITHUB_REF_NAME"
+            test "$version" = "v$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -1)"
+          fi
+          PACKAGE="sshmcp-${version}-${{ matrix.target }}"
           echo "PACKAGE=${PACKAGE}" >> "$GITHUB_ENV"
           echo "ARCHIVE_EXT=${{ matrix.archive_ext }}" >> "$GITHUB_ENV"
           echo "BIN_PATH=target/${{ matrix.target }}/release/${{ matrix.binary }}" >> "$GITHUB_ENV"

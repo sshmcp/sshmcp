@@ -412,4 +412,44 @@ profiles:
             PolicyEffect::Deny
         );
     }
+
+    #[test]
+    fn full_access_rules_allow_any_exec_and_read_without_command_lists() {
+        let config: AppConfig = serde_yaml::from_str(
+            r#"
+profiles:
+- name: full
+  target: {host: example, user: root, auth: {type: password, password: secret}}
+  agent_policy:
+    capabilities: {exec: true, read: true}
+    rules:
+    - {id: full-exec, match: {operation: exec, commands: ['*']}, effect: allow}
+    - {id: full-read, match: {operation: read, paths: ['*']}, effect: allow}
+"#,
+        )
+        .unwrap();
+        let exec = Request::Exec {
+            profile: "full".into(),
+            command: "apt-get update".into(),
+            cwd: None,
+            timeout_seconds: Some(30),
+            env: vec![],
+        };
+        let read = Request::Read {
+            profile: "full".into(),
+            path: "/etc/shadow".into(),
+        };
+        assert_eq!(
+            PolicyEngine::authorize(&config, CallerType::Mcp, &exec)
+                .unwrap()
+                .effect,
+            PolicyEffect::Allow
+        );
+        assert_eq!(
+            PolicyEngine::authorize(&config, CallerType::Mcp, &read)
+                .unwrap()
+                .effect,
+            PolicyEffect::Allow
+        );
+    }
 }

@@ -390,7 +390,7 @@ impl GatewayService {
         };
         if matches!(
             config.runtime.mode,
-            RuntimeMode::Cloud | RuntimeMode::PrivateWorker
+            RuntimeMode::Cloud | RuntimeMode::CloudBastion | RuntimeMode::PrivateWorker
         ) {
             let redactor = match &request {
                 Request::ProfileCreate { profile } => {
@@ -815,7 +815,7 @@ impl GatewayService {
     ) -> Result<CommandResult, ArrtError> {
         if matches!(
             config.runtime.mode,
-            RuntimeMode::Cloud | RuntimeMode::PrivateWorker
+            RuntimeMode::Cloud | RuntimeMode::CloudBastion | RuntimeMode::PrivateWorker
         ) && matches!(
             request,
             Request::TunnelOpen { .. } | Request::TunnelClose { .. }
@@ -1214,7 +1214,11 @@ mod tests {
 
     #[tokio::test]
     async fn cloud_and_private_worker_runtimes_reject_tunnel_before_connection() {
-        for mode in [RuntimeMode::Cloud, RuntimeMode::PrivateWorker] {
+        for mode in [
+            RuntimeMode::Cloud,
+            RuntimeMode::CloudBastion,
+            RuntimeMode::PrivateWorker,
+        ] {
             let mut config = AppConfig::default();
             config.runtime.mode = mode;
             let service = GatewayService::new();

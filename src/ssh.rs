@@ -113,9 +113,17 @@ impl EmbeddedSession {
                     profile.host_key_mode,
                 )
                 .await
-            } else if profile.runtime_mode == crate::config::RuntimeMode::Cloud {
-                let address = resolve_direct(&target_policy, &endpoint.host, endpoint.port).await?;
-                connect_direct(config.clone(), endpoint, address, profile.host_key_mode).await
+            } else if matches!(
+                profile.runtime_mode,
+                crate::config::RuntimeMode::Cloud | crate::config::RuntimeMode::CloudBastion
+            ) {
+                match resolve_direct(&target_policy, &endpoint.host, endpoint.port).await {
+                    Ok(address) => {
+                        connect_direct(config.clone(), endpoint, address, profile.host_key_mode)
+                            .await
+                    }
+                    Err(error) => Err(error),
+                }
             } else {
                 connect_direct(
                     config.clone(),
@@ -128,8 +136,15 @@ impl EmbeddedSession {
             let handle = match result {
                 Ok(handle) => handle,
                 Err(error) => {
+                    let jump_failure = profile.runtime_mode
+                        == crate::config::RuntimeMode::CloudBastion
+                        && handles.is_empty();
                     Self { handles }.disconnect().await;
-                    return Err(error);
+                    return Err(if jump_failure {
+                        ArrtError::JumpHost(Box::new(error))
+                    } else {
+                        error
+                    });
                 }
             };
             handles.push(Arc::new(handle));
@@ -292,7 +307,8 @@ async fn connect_via_channel(
 ) -> Result<ClientHandle, ArrtError> {
     let channel = upstream
         .channel_open_direct_tcpip(endpoint.host.clone(), endpoint.port.into(), "127.0.0.1", 0)
-        .await?;
+        .await
+        .map_err(|error| ArrtError::JumpForwarding(error.to_string()))?;
     let mut handle = client::connect_stream(
         config,
         channel.into_stream(),

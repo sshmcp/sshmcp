@@ -1,5 +1,7 @@
 # SSHMCP
 
+[在线控制台](https://sshmcp.uuuu.site/guide#jump)已支持单跳 SSH：先接入并测试 vger，再在添加 gpu11 时选择它作为入口。目标只需 SSH，无需上网或安装 Worker。如果入口只能主动出网，在入口上运行一个 Worker 即可。Core v0.5.0 新增供云端构造路由使用的 `cloud_bastion` 运行模式：首跳必须解析为公网地址，再通过已认证的 SSH 连接访问目标，两端均严格核对主机指纹。
+
 为 AI 智能体提供安全的远程访问。
 
 赋予智能体能力，而不是 SSH 凭据。

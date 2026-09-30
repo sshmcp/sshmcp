@@ -10,7 +10,7 @@ pub struct RuntimeTargetPolicy(pub RuntimeMode);
 
 impl TargetPolicy for RuntimeTargetPolicy {
     fn validate(&self, host: &str, address: IpAddr) -> Result<(), ArrtError> {
-        if self.0 == RuntimeMode::Cloud && !is_public(address) {
+        if matches!(self.0, RuntimeMode::Cloud | RuntimeMode::CloudBastion) && !is_public(address) {
             return Err(ArrtError::PolicyDenied(format!(
                 "Cloud target policy rejects {host} resolved to {address}"
             )));
@@ -115,6 +115,14 @@ mod tests {
         let error = resolve_direct(&RuntimeTargetPolicy(RuntimeMode::Cloud), "localhost", 22)
             .await
             .unwrap_err();
+        assert_eq!(error.code(), "policy_denied");
+        let error = resolve_direct(
+            &RuntimeTargetPolicy(RuntimeMode::CloudBastion),
+            "localhost",
+            22,
+        )
+        .await
+        .unwrap_err();
         assert_eq!(error.code(), "policy_denied");
     }
 }

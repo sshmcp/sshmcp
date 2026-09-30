@@ -2,6 +2,8 @@
 
 Secure remote access for AI agents.
 
+The [hosted console](https://sshmcp.uuuu.site/en/guide#jump) supports a single SSH jump host: add and test vger, then select it when adding gpu11. The target needs SSH only, with no internet access or Worker installation. If the entry server only permits outbound access, run a Worker there. Core v0.5.0 adds the `cloud_bastion` runtime for Cloud-created routes: the first hop must resolve to a public address, while the pinned target is reached through that authenticated SSH connection.
+
 Give agents capabilities, not SSH credentials.
 
 

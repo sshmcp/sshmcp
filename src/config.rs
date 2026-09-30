@@ -261,6 +261,9 @@ pub enum RuntimeMode {
     #[default]
     SelfHosted,
     Cloud,
+    /// Explicit tenant-owned SSH route: public first hop, pinned SSH target
+    /// reached only through that authenticated bastion (no delegated shell).
+    CloudBastion,
     /// Cloud-authorized execution from a private Worker network. This keeps
     /// Cloud policy and strict host-key checks while allowing private targets.
     PrivateWorker,
@@ -650,7 +653,7 @@ impl AppConfig {
         self.validate_mcp()?;
         if matches!(
             self.runtime.mode,
-            RuntimeMode::Cloud | RuntimeMode::PrivateWorker
+            RuntimeMode::Cloud | RuntimeMode::CloudBastion | RuntimeMode::PrivateWorker
         ) && self.runtime.host_key_mode != HostKeyMode::Strict
         {
             return Err(ArrtError::Config(
@@ -658,6 +661,14 @@ impl AppConfig {
             ));
         }
         for profile in &self.profiles {
+            if self.runtime.mode == RuntimeMode::CloudBastion
+                && (profile.bastions.len() != 1 || profile.via_profile.is_some())
+            {
+                return Err(ArrtError::Config(
+                    "cloud_bastion requires exactly one authenticated bastion and no via_profile"
+                        .into(),
+                ));
+            }
             if !names.insert(profile.name.clone()) {
                 return Err(ArrtError::Config(format!(
                     "duplicate profile name: {}",
@@ -2077,5 +2088,39 @@ mod migration_env_tests {
             .as_deref(),
             Some("task")
         );
+    }
+}
+
+#[cfg(test)]
+mod cloud_bastion_tests {
+    use super::*;
+
+    #[test]
+    fn cloud_bastion_requires_one_hop_and_strict_identity_checks() {
+        let mut config: AppConfig = serde_yaml::from_str(
+            r#"
+runtime: {mode: cloud_bastion, host_key_mode: strict}
+profiles:
+  - name: gpu11
+    target:
+      host: gpu11
+      user: test
+      auth: {type: password, password: fixture}
+    bastions:
+      - host: vger.example.com
+        user: test
+        auth: {type: password, password: fixture}
+"#,
+        )
+        .unwrap();
+        config.validate().unwrap();
+        config.runtime.host_key_mode = HostKeyMode::InsecureCompatibility;
+        assert!(config.validate().is_err());
+        config.runtime.host_key_mode = HostKeyMode::Strict;
+        let hop = config.profiles[0].bastions[0].clone();
+        config.profiles[0].bastions.push(hop);
+        assert!(config.validate().is_err());
+        config.profiles[0].bastions.clear();
+        assert!(config.validate().is_err());
     }
 }

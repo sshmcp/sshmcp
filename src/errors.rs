@@ -26,6 +26,10 @@ pub enum ArrtError {
     Ssh(String),
     #[error("SSH authentication failed")]
     AuthenticationFailed,
+    #[error("jump host connection failed: {0}")]
+    JumpHost(Box<ArrtError>),
+    #[error("jump host could not forward to the target: {0}")]
+    JumpForwarding(String),
     #[error("untrusted SSH host key for {host}: {fingerprint}")]
     HostKeyUntrusted { host: String, fingerprint: String },
     #[error("SSH host key changed for {host}: expected {expected}, received {actual}")]
@@ -65,6 +69,14 @@ impl ArrtError {
             Self::RequestTimeout(_) => "request_timeout",
             Self::Ssh(_) => "ssh_error",
             Self::AuthenticationFailed => "authentication_failed",
+            Self::JumpForwarding(_) => "jump_forwarding_failed",
+            Self::JumpHost(error) => match error.as_ref() {
+                Self::AuthenticationFailed => "jump_authentication_failed",
+                Self::HostKeyChanged { .. } | Self::HostKeyUntrusted { .. } => {
+                    "jump_host_key_mismatch"
+                }
+                _ => "jump_unreachable",
+            },
             Self::HostKeyUntrusted { .. } => "host_key_untrusted",
             Self::HostKeyChanged { .. } => "host_key_changed",
             Self::Agent(_) => "agent_error",

@@ -245,7 +245,10 @@ impl SessionManager {
                         via_profile,
                         target,
                     } => {
-                        if config.runtime.mode == RuntimeMode::Cloud {
+                        if matches!(
+                            config.runtime.mode,
+                            RuntimeMode::Cloud | RuntimeMode::CloudBastion
+                        ) {
                             return Err(ArrtError::PolicyDenied(
                             "Cloud target policy cannot verify delegated via_profile destinations"
                                 .into(),

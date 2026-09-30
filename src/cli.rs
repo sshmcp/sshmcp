@@ -43,6 +43,7 @@ pub enum TopLevelCommand {
     Plan(PlanCommand),
     Mcp(McpCommand),
     Serve(ServeCommand),
+    Worker(WorkerCommand),
 }
 
 #[derive(Args, Debug)]
@@ -434,6 +435,7 @@ async fn dispatch_inner(cli: Cli) -> Result<CommandResult, ArrtError> {
             service.shutdown().await;
             Ok(CommandResult::success().with_data(json!({"status":"stopped"})))
         }
+        TopLevelCommand::Worker(command) => crate::worker::dispatch(command).await,
     }
 }
 
@@ -551,6 +553,39 @@ pub struct ServeCommand {
     /// Override the configured MCP listen address.
     #[arg(long)]
     listen: Option<String>,
+}
+
+#[derive(Args, Debug)]
+pub struct WorkerCommand {
+    #[command(subcommand)]
+    pub command: WorkerSubcommand,
+}
+
+#[derive(Subcommand, Debug)]
+pub enum WorkerSubcommand {
+    /// Exchange a one-time enrollment token for this Worker's identity.
+    Enroll {
+        #[arg(long)]
+        cloud: String,
+        #[arg(long, env = "SSHMCP_ENROLLMENT_TOKEN", hide_env_values = true)]
+        token: String,
+        #[arg(long, default_value = "private-worker")]
+        name: String,
+        #[arg(long, default_value_t = 1, value_parser = clap::value_parser!(u16).range(1..=32))]
+        max_concurrency: u16,
+        #[arg(long)]
+        data_dir: Option<PathBuf>,
+    },
+    /// Connect to Cloud and execute authorized SSH jobs.
+    Run {
+        #[arg(long)]
+        data_dir: Option<PathBuf>,
+    },
+    /// Show enrollment and local execution-journal status.
+    Status {
+        #[arg(long)]
+        data_dir: Option<PathBuf>,
+    },
 }
 
 fn rpc_with_caller(request: Request, caller: CallerType) -> RpcRequest {

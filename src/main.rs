@@ -17,6 +17,7 @@ mod session;
 mod ssh;
 mod storage;
 mod target;
+mod worker;
 
 use clap::Parser;
 

@@ -311,12 +311,51 @@ MSYS2_ARG_CONV_EXCL="*" sshmcp download --profile delegated-target --src /tmp/lo
 
 `daemon stop` returns `{"status":"stopping"}` when it successfully signals a running daemon and `{"status":"not_running"}` when nothing is listening.
 
+## Execution Location Worker
+
+Core v0.3.0 can run as the Linux Worker used by SSHMCP Cloud v0.4.0. The Worker makes an outbound WebSocket connection to Cloud, receives only structured SSH `exec` and `read_file` jobs, and invokes the same Core policy and strict host-key checks locally. `private_worker` mode permits an explicitly configured private-network target while keeping tunnels disabled; ordinary `cloud` mode continues to reject private and reserved destinations.
+
+An enrollment token is single-use and expires after 15 minutes. It is exchanged for a separate revocable Worker credential stored in `worker.json`. The same data directory also contains the SQLite WAL execution journal that prevents a received `execution_id` from entering Core twice, including after restart. Mount or preserve that directory and restrict it to the Worker account.
+
+Before a v0.3.0 release is published, build the exact feature branch on the Linux host:
+
+```bash
+cargo install --git https://github.com/sshmcp/sshmcp \
+  --branch feat/v0.4-execution-locations --locked
+export SSHMCP_ENROLLMENT_TOKEN='smce_replace_with_the_one_time_value'
+sudo install -d -m 0700 -o "$USER" -g "$(id -gn)" /var/lib/sshmcp
+sshmcp worker enroll --cloud https://sshmcp.example \
+  --name 'Home Network' --data-dir /var/lib/sshmcp
+sshmcp worker run --data-dir /var/lib/sshmcp
+```
+
+Docker uses only a dedicated data volume; it does not require privileged mode, the Docker socket, or a host-filesystem mount:
+
+```bash
+docker build -t sshmcp-worker:0.3.0 \
+  https://github.com/sshmcp/sshmcp.git#feat/v0.4-execution-locations
+docker volume create sshmcp-worker-data
+docker run --rm \
+  -e SSHMCP_ENROLLMENT_TOKEN='smce_replace_with_the_one_time_value' \
+  -v sshmcp-worker-data:/var/lib/sshmcp \
+  sshmcp-worker:0.3.0 worker enroll --cloud https://sshmcp.example \
+  --name 'Home Network' --data-dir /var/lib/sshmcp
+docker run -d --name sshmcp-worker --restart unless-stopped \
+  -v sshmcp-worker-data:/var/lib/sshmcp \
+  sshmcp-worker:0.3.0 worker run --data-dir /var/lib/sshmcp
+```
+
+Use `sshmcp worker status --data-dir /var/lib/sshmcp` for the enrolled identity and journal counts. Revoking a Worker in Cloud rejects future connections and jobs; it cannot undo a remote action that may already have started. If the connection is lost after a start grant, Cloud reports the execution as `unknown` and does not replay it automatically.
+
+The release workflow is configured to build Linux amd64 and arm64 archives and matching GHCR images for a version tag. Do not use `ghcr.io/sshmcp/sshmcp:v0.3.0` until that tag and image have actually been published. Linux amd64 is covered by the local v0.4 integration environment; arm64 is built by CI but still requires hardware/runtime acceptance.
+
 ## Install from Releases
 
 Release assets are published automatically for every pushed `v*` tag.
 
 - Windows x64: `sshmcp-<version>-x86_64-pc-windows-msvc.zip`
 - Linux x64: `sshmcp-<version>-x86_64-unknown-linux-gnu.tar.gz`
+- Linux arm64: `sshmcp-<version>-aarch64-unknown-linux-gnu.tar.gz`
 - Checksums: `SHA256SUMS`
 
 Typical install flow:

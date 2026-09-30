@@ -261,6 +261,9 @@ pub enum RuntimeMode {
     #[default]
     SelfHosted,
     Cloud,
+    /// Cloud-authorized execution from a private Worker network. This keeps
+    /// Cloud policy and strict host-key checks while allowing private targets.
+    PrivateWorker,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, Default, PartialEq, Eq)]
@@ -645,11 +648,13 @@ impl AppConfig {
             return Err(ArrtError::Config("no profiles configured".to_string()));
         }
         self.validate_mcp()?;
-        if self.runtime.mode == RuntimeMode::Cloud
-            && self.runtime.host_key_mode != HostKeyMode::Strict
+        if matches!(
+            self.runtime.mode,
+            RuntimeMode::Cloud | RuntimeMode::PrivateWorker
+        ) && self.runtime.host_key_mode != HostKeyMode::Strict
         {
             return Err(ArrtError::Config(
-                "Cloud runtime requires runtime.host_key_mode: strict".into(),
+                "Cloud and private Worker runtimes require runtime.host_key_mode: strict".into(),
             ));
         }
         for profile in &self.profiles {

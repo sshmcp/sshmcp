@@ -105,6 +105,9 @@ mod tests {
         assert!(RuntimeTargetPolicy(RuntimeMode::SelfHosted)
             .validate("target", "127.0.0.1".parse().unwrap())
             .is_ok());
+        assert!(RuntimeTargetPolicy(RuntimeMode::PrivateWorker)
+            .validate("private-target", "10.1.2.3".parse().unwrap())
+            .is_ok());
     }
 
     #[tokio::test]

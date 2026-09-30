@@ -388,7 +388,10 @@ impl GatewayService {
                 ))
             }
         };
-        if config.runtime.mode == RuntimeMode::Cloud {
+        if matches!(
+            config.runtime.mode,
+            RuntimeMode::Cloud | RuntimeMode::PrivateWorker
+        ) {
             let redactor = match &request {
                 Request::ProfileCreate { profile } => {
                     SecretRedactor::from_config_and_profile_with_credentials(
@@ -810,12 +813,13 @@ impl GatewayService {
         request: Request,
         session_namespace: &str,
     ) -> Result<CommandResult, ArrtError> {
-        if config.runtime.mode == RuntimeMode::Cloud
-            && matches!(
-                request,
-                Request::TunnelOpen { .. } | Request::TunnelClose { .. }
-            )
-        {
+        if matches!(
+            config.runtime.mode,
+            RuntimeMode::Cloud | RuntimeMode::PrivateWorker
+        ) && matches!(
+            request,
+            Request::TunnelOpen { .. } | Request::TunnelClose { .. }
+        ) {
             return Err(ArrtError::PolicyDenied(
                 "Cloud runtime disables SSH tunnels".into(),
             ));
@@ -1209,26 +1213,28 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn cloud_runtime_rejects_tunnel_before_connection() {
-        let mut config = AppConfig::default();
-        config.runtime.mode = RuntimeMode::Cloud;
-        let service = GatewayService::new();
-        let result = service
-            .execute_authorized(
-                &config,
-                CallerType::HumanCli,
-                Request::TunnelOpen {
-                    profile: "missing".into(),
-                    local_port: 1234,
-                    remote_host: "example.com".into(),
-                    remote_port: 80,
-                },
-                "test",
-            )
-            .await;
-        assert!(
-            matches!(result, Err(ArrtError::PolicyDenied(message)) if message.contains("disables SSH tunnels"))
-        );
+    async fn cloud_and_private_worker_runtimes_reject_tunnel_before_connection() {
+        for mode in [RuntimeMode::Cloud, RuntimeMode::PrivateWorker] {
+            let mut config = AppConfig::default();
+            config.runtime.mode = mode;
+            let service = GatewayService::new();
+            let result = service
+                .execute_authorized(
+                    &config,
+                    CallerType::HumanCli,
+                    Request::TunnelOpen {
+                        profile: "missing".into(),
+                        local_port: 1234,
+                        remote_host: "example.com".into(),
+                        remote_port: 80,
+                    },
+                    "test",
+                )
+                .await;
+            assert!(
+                matches!(result, Err(ArrtError::PolicyDenied(message)) if message.contains("disables SSH tunnels"))
+            );
+        }
     }
 
     #[tokio::test]

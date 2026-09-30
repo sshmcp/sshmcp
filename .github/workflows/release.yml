@@ -27,6 +27,13 @@ jobs:
             target: x86_64-pc-windows-msvc
             binary: sshmcp.exe
             archive_ext: zip
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            binary: sshmcp
+            archive_ext: tar.gz
+            apt_package: gcc-aarch64-linux-gnu
+            linker: aarch64-linux-gnu-gcc
+            ar: aarch64-linux-gnu-ar
 
     steps:
       - uses: actions/checkout@v4
@@ -35,6 +42,18 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+
+      - name: Install cross linker
+        if: matrix.apt_package != ''
+        run: sudo apt-get update && sudo apt-get install -y "${{ matrix.apt_package }}"
+
+      - name: Configure cross linker
+        if: matrix.linker != ''
+        shell: bash
+        run: |
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=${{ matrix.linker }}" >> "$GITHUB_ENV"
+          echo "CC_aarch64_unknown_linux_gnu=${{ matrix.linker }}" >> "$GITHUB_ENV"
+          echo "AR_aarch64_unknown_linux_gnu=${{ matrix.ar }}" >> "$GITHUB_ENV"
 
       - name: Run tests
         run: cargo test --locked
@@ -126,3 +145,28 @@ jobs:
             dist/*.tar.gz
             dist/*.sha256
             dist/SHA256SUMS
+
+  docker:
+    name: publish-worker-image
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            ghcr.io/sshmcp/sshmcp:${{ github.ref_name }}
+            ghcr.io/sshmcp/sshmcp:latest

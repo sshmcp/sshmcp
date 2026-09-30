@@ -14,7 +14,7 @@ Rule-scoped task/time grants and hash-bound ordered Plans reduce repeated confir
 </p>
 
 <p align="center">
-  <img src="docs/readme/hero.svg" alt="SSHMCP for Agents" width="100%">
+  <img src="docs/readme/workflow.svg" alt="AI → SSHMCP Cloud → public SSH or local Worker → private SSH" width="100%">
 </p>
 
 <p align="center">
@@ -30,25 +30,40 @@ Rule-scoped task/time grants and hash-bound ordered Plans reduce repeated confir
   <img src="https://img.shields.io/badge/platforms-Windows%20x64%20%7C%20Linux%20x64-0f172a.svg" alt="Supported platforms">
 </p>
 
-SSHMCP is the open-source Core and self-hosted gateway. SSHMCP Cloud is a future hosted product. It provides reusable embedded SSH sessions, profile-based secret isolation, bastion routing, and policy-controlled remote operations for Codex, ChatGPT, Claude Code, Cursor, and custom agents.
+SSHMCP is the open-source Core and self-hosted gateway. Use [SSHMCP Cloud](https://sshmcp.uuuu.site/en) today through its hosted console, or run this Core gateway yourself. It provides reusable embedded SSH sessions, profile-based secret isolation, bastion routing, and policy-controlled remote operations for Codex, ChatGPT, Claude Code, Cursor, and custom agents.
 
 It is intentionally **not** a general-purpose SSH client replacement. The project is optimized for agent workflows, profile-driven safety, and repeatable remote operations.
 
 ## How it works
 
-```text
-ChatGPT · Claude · Codex · Cursor · OpenCode · Custom Agents
-                         | MCP
-                         v
-                      SSHMCP
-       Identity · Policy · Human Approval · Audit
-                  Session Management
-                         | SSH
-                         v
-                    Your Servers
-```
+[Hosted setup guide](https://sshmcp.uuuu.site/en/guide) · [中文教程](https://sshmcp.uuuu.site/guide)
 
-An agent becomes an authenticated Principal. Policy returns Allow, Confirm, or Deny. Confirmed requests require human approval; permitted execution is audited. This is not `LLM -> unrestricted ssh command`. OAuth identity and tenant-aware session isolation prepare the Core for a separate hosted control plane.
+An agent becomes an authenticated Principal. Policy returns Allow, Confirm, or Deny. Confirmed requests require human approval; permitted execution is audited. This is not `LLM -> unrestricted ssh command`. OAuth identity and tenant-aware session isolation support the hosted control plane.
+
+## Use the hosted service
+
+1. Open [sshmcp.uuuu.site](https://sshmcp.uuuu.site/en) and sign in to the console.
+2. Add a public server. For a private network, create a Private Location under Local Worker, then enroll and start its Worker using the console instructions.
+3. Verify the host fingerprint, run the key installation command on the target, and test SSH in the console.
+4. Set a server access policy and authorize a compatible remote MCP client.
+5. List your servers, run `hostname` if permitted, and verify the activity record.
+
+Hosted MCP endpoint: `https://sshmcp.uuuu.site/mcp`. No Cloud deployment is required. Targets need SSH; private networks need an online Worker. Dedicated users have no sudo by default; Linux privileges and AI policies apply separately.
+
+### Client compatibility
+
+Compatibility depends on the client, not just the model name. Clients need Streamable HTTP MCP and compatible OAuth or Bearer authentication.
+
+| Client | Connection path |
+| --- | --- |
+| ChatGPT | Custom MCP plugin with OAuth; subject to account and workspace availability |
+| Claude Code | `claude mcp add --transport http sshmcp https://sshmcp.uuuu.site/mcp`, then authenticate in `/mcp` |
+| Codex | Remote MCP configuration with a scoped credential supplied through an environment variable |
+| Grok | Connectors → New Connector → Custom; a Grok bot host must configure Remote MCP Tools |
+| Other MCP clients | Same endpoint with compatible transport and authentication |
+| Muse (muse.ai) | Documents a Linux VM, CLI and custom connectors; SSHMCP integration is not yet verified, and no one-click MCP setup is claimed |
+
+See the [public guide](https://sshmcp.uuuu.site/en/guide#clients) for full instructions, official sources, private-network setup and troubleshooting. Keep access tokens, SSH private keys and Worker enrollment tokens out of AI conversations.
 
 ## Why SSHMCP
 
@@ -121,9 +136,7 @@ Authentication creates a `Principal` for each MCP or CLI caller. OAuth JWT `sub`
 
 ## Quick Start
 
-<p align="center">
-  <img src="docs/readme/architecture.svg" alt="Agent to daemon to embedded SSH to bastion and target flow" width="100%">
-</p>
+[Self-hosted Core internals diagram](docs/readme/architecture.svg)
 
 ```text
 Local Agent -> Skill -> CLI -> daemon RPC --+

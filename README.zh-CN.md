@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/readme/hero.svg" alt="SSHMCP for Agents" width="100%">
+  <img src="docs/readme/workflow.zh-CN.svg" alt="AI → SSHMCP Cloud → public SSH or local Worker → private SSH" width="100%">
 </p>
 
 <p align="center">
@@ -32,18 +32,34 @@
 
 ## 工作方式
 
-```text
-ChatGPT · Claude · Codex · Cursor · OpenCode · 自定义智能体
-                         | MCP
-                         v
-                      SSHMCP
-         身份 · 策略 · 人工审批 · 审计 · 会话管理
-                         | SSH
-                         v
-                       服务器
-```
+[在线使用教程](https://sshmcp.uuuu.site/guide) · [English guide](https://sshmcp.uuuu.site/en/guide)
 
-智能体先映射为已认证的 Principal，再由策略作出 Allow、Confirm 或 Deny 决策。需要确认的请求必须经人工审批，允许的 SSH 操作会被审计。这不是 `LLM -> unrestricted ssh command`。本仓库是开源 Core 和自托管实现；SSHMCP Cloud 是未来单独提供的托管产品。
+智能体先映射为已认证的 Principal，再由策略作出 Allow、Confirm 或 Deny 决策。需要确认的请求必须经人工审批，允许的 SSH 操作会被审计。这不是 `LLM -> unrestricted ssh command`。本仓库是开源 Core 和自托管实现；SSHMCP Cloud 已提供[在线控制台](https://sshmcp.uuuu.site)，可直接登录使用；也可以自行运行本仓库的网关。
+
+## 直接在线使用
+
+1. 打开 [sshmcp.uuuu.site](https://sshmcp.uuuu.site)，登录控制台。
+2. 添加公网服务器；内网服务器先在「本地 Worker」创建执行位置，按页面指引注册并启动 Worker。
+3. 核对主机指纹，在目标服务器执行公钥安装命令，然后回到控制台测试 SSH。
+4. 设置服务器访问策略，连接支持远程 MCP 的 AI 客户端。
+5. 先列出服务器，再在策略允许时执行 `hostname`，并核对活动记录。
+
+在线 MCP 地址：`https://sshmcp.uuuu.site/mcp`。无需自行部署 Cloud。目标机器只需 SSH；内网需要 Worker 持续在线。专用用户默认不授予 sudo，Linux 权限与 AI 策略分别生效。
+
+### 客户端兼容性
+
+支持取决于客户端的传输与认证能力，不只取决于模型名称。客户端需支持 Streamable HTTP MCP，以及兼容的 OAuth 或 Bearer 认证。
+
+| 客户端 | 接入方式 |
+| --- | --- |
+| ChatGPT | 自定义 MCP 插件，通过 OAuth 登录；可用性取决于账号与工作空间 |
+| Claude Code | `claude mcp add --transport http sshmcp https://sshmcp.uuuu.site/mcp`，再在 `/mcp` 中授权 |
+| Codex | 远程 MCP 配置加限定范围的访问凭据，令牌通过环境变量提供 |
+| Grok | Connectors → New Connector → Custom；Grok bot 宿主需配置 Remote MCP Tools |
+| 其他 MCP 客户端 | 相同地址，兼容的传输与认证 |
+| Muse (muse.ai) | 官方提供 Linux VM、CLI 和自定义连接器能力；尚未验证 SSHMCP 集成，不宣称一键 MCP 接入 |
+
+完整步骤、官方来源、内网部署与排查见[公开教程](https://sshmcp.uuuu.site/guide#clients)。不要把访问令牌、SSH 私钥或 Worker 注册令牌粘贴到 AI 对话里。
 
 ## 为什么需要 sshmcp
 
@@ -103,9 +119,7 @@ MCP 与 CLI 调用会映射为 `Principal`。OAuth JWT 的 `sub` 标识调用者
 
 ## 快速开始
 
-<p align="center">
-  <img src="docs/readme/architecture.svg" alt="Agent to daemon to embedded SSH to bastion and target flow" width="100%">
-</p>
+[自托管 Core 内部架构图](docs/readme/architecture.svg)
 
 1. 从 [GitHub Releases](https://github.com/sshmcp/sshmcp/releases) 下载二进制，并把 `sshmcp` 放进 `PATH`。
 2. 准备 profile 配置。推荐 YAML，起点是 [examples/profiles.yaml](examples/profiles.yaml)。

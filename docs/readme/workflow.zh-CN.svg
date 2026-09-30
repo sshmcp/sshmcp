@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="820" viewBox="0 0 1440 820" role="img" aria-labelledby="title desc">
+<title id="title">SSHMCP：从 AI 到您的服务器</title>
+<desc id="desc">MCP 客户端向云端发起请求。云端连接公网 SSH 服务器，或将任务交给本地 Worker 连接内网 SSH 服务器。Worker 主动连接云端。</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10" fill="#7891b6"/></marker></defs>
+<rect x="1" y="1" width="1438" height="818" rx="24" fill="#ffffff" stroke="#dce5ef"/>
+<g font-family="Arial, Noto Sans CJK SC, Microsoft YaHei, sans-serif">
+<text x="40" y="45" font-size="15" fill="#2868db" font-weight="600">工作方式总览</text>
+<text x="40" y="98" font-size="36" fill="#172b48" font-weight="600">从 AI 到您的服务器，一图看懂</text>
+<text x="40" y="139" font-size="20" fill="#516178" font-weight="400">同一个 MCP 地址：云端连接公网 SSH，通过您的 Worker 连接内网 SSH。</text>
+<rect x="40" y="290" width="285" height="150" rx="14" fill="#f8fafc" stroke="#dce5ef"/>
+<text x="62" y="326" font-size="22" fill="#172b48" font-weight="600">您的 AI 客户端</text>
+<text x="62" y="358" font-size="16" fill="#516178" font-weight="400">ChatGPT · Claude · Codex</text>
+<text x="62" y="383" font-size="16" fill="#516178" font-weight="400">Grok · 兼容的 MCP 客户端</text>
+<path d="M332 364 L391 364" stroke="#7891b6" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="349.5" y="350" font-size="14" fill="#516178" font-weight="400">MCP</text>
+<rect x="405" y="290" width="260" height="150" rx="14" fill="#edf4ff" stroke="#b3cafd"/>
+<text x="427" y="326" font-size="22" fill="#172b48" font-weight="600">SSHMCP Cloud</text>
+<text x="427" y="358" font-size="16" fill="#516178" font-weight="400">权限校验 · 任务路由</text>
+<text x="427" y="383" font-size="16" fill="#516178" font-weight="400">操作记录</text>
+<path d="M685 210 V516" stroke="#ccdbef" stroke-width="2"/>
+<text x="710" y="206" font-size="17" fill="#344863" font-weight="600">公网：由云端通过 SSH 连接</text>
+<path d="M707 285 L762 285" stroke="#7891b6" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="722.5" y="271" font-size="14" fill="#516178" font-weight="400">SSH</text>
+<rect x="780" y="229" width="608" height="108" rx="14" fill="#f8fafc" stroke="#dce5ef"/>
+<text x="802" y="265" font-size="22" fill="#172b48" font-weight="600">公网服务器</text>
+<text x="802" y="297" font-size="16" fill="#516178" font-weight="400">云端可直接访问这台服务器的 SSH</text>
+<text x="710" y="389" font-size="17" fill="#344863" font-weight="600">内网：由您的 Worker 通过 SSH 连接</text>
+<path d="M704 472 L754 472" stroke="#7891b6" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="717.0" y="458" font-size="14" fill="#516178" font-weight="400">任务</text>
+<rect x="766" y="412" width="310" height="132" rx="14" fill="#f0faf5" stroke="#b8ddcf"/>
+<text x="788" y="448" font-size="22" fill="#172b48" font-weight="600">您的本地 Worker</text>
+<text x="788" y="480" font-size="16" fill="#516178" font-weight="400">您的电脑、NAS 或局域网主机</text>
+<text x="788" y="505" font-size="16" fill="#516178" font-weight="400">主动向云端建立连接</text>
+<path d="M1085 472 L1135 472" stroke="#7891b6" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="1098.0" y="458" font-size="14" fill="#516178" font-weight="400">SSH</text>
+<rect x="1152" y="412" width="236" height="132" rx="14" fill="#f8fafc" stroke="#dce5ef"/>
+<text x="1174" y="448" font-size="22" fill="#172b48" font-weight="600">内网服务器</text>
+<text x="1174" y="480" font-size="16" fill="#516178" font-weight="400">Worker 可访问</text>
+<text x="1174" y="505" font-size="16" fill="#516178" font-weight="400">无需公网 SSH 入口</text>
+<text x="40" y="582" font-size="19" fill="#516178" font-weight="400">执行结果返回 AI。您决定它能访问哪些服务器、执行哪些操作。</text>
+<path d="M40 617 H1400" stroke="#dce5ef"/>
+<text x="40" y="653" font-size="19" fill="#235bc1" font-weight="600">1  选择连接方式</text>
+<text x="40" y="688" font-size="16" fill="#516178" font-weight="400">公网云端 / 内网 Worker</text>
+<text x="386" y="653" font-size="19" fill="#235bc1" font-weight="600">2  安装公钥并测试</text>
+<text x="386" y="688" font-size="16" fill="#516178" font-weight="400">在目标服务器执行安装命令</text>
+<text x="732" y="653" font-size="19" fill="#235bc1" font-weight="600">3  授权 AI 客户端</text>
+<text x="732" y="688" font-size="16" fill="#516178" font-weight="400">OAuth 或限定范围凭据</text>
+<text x="1078" y="653" font-size="19" fill="#235bc1" font-weight="600">4  开始任务</text>
+<text x="1078" y="688" font-size="16" fill="#516178" font-weight="400">按名称选择服务器并核对结果</text>
+<rect x="40" y="724" width="1360" height="56" rx="10" fill="#f5f8fc"/>
+<text x="57" y="759" font-size="18" fill="#516178" font-weight="400">浏览器可以关闭；云端和 Worker 需要保持在线。目标服务器只需 SSH，无需常驻 MCP 服务。</text>
+</g></svg>

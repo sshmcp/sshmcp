@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="820" viewBox="0 0 1440 820" role="img" aria-labelledby="title desc">
+<title id="title">SSHMCP: from your AI to your servers</title>
+<desc id="desc">MCP clients send requests to Cloud. Cloud connects to public SSH servers or routes jobs to a local Worker for private SSH servers. Worker initiates its connection to Cloud.</desc>
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10" fill="#7891b6"/></marker></defs>
+<rect x="1" y="1" width="1438" height="818" rx="24" fill="#ffffff" stroke="#dce5ef"/>
+<g font-family="Arial, Noto Sans CJK SC, Microsoft YaHei, sans-serif">
+<text x="40" y="45" font-size="15" fill="#2868db" font-weight="600">HOW SSHMCP WORKS</text>
+<text x="40" y="98" font-size="36" fill="#172b48" font-weight="600">From your AI to your servers</text>
+<text x="40" y="139" font-size="20" fill="#516178" font-weight="400">One MCP endpoint. Public SSH via Cloud; private SSH via your own Worker.</text>
+<rect x="40" y="290" width="285" height="150" rx="14" fill="#f8fafc" stroke="#dce5ef"/>
+<text x="62" y="326" font-size="22" fill="#172b48" font-weight="600">Your AI client</text>
+<text x="62" y="358" font-size="16" fill="#516178" font-weight="400">ChatGPT · Claude · Codex</text>
+<text x="62" y="383" font-size="16" fill="#516178" font-weight="400">Grok · compatible MCP clients</text>
+<path d="M332 364 L391 364" stroke="#7891b6" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="349.5" y="350" font-size="14" fill="#516178" font-weight="400">MCP</text>
+<rect x="405" y="290" width="260" height="150" rx="14" fill="#edf4ff" stroke="#b3cafd"/>
+<text x="427" y="326" font-size="22" fill="#172b48" font-weight="600">SSHMCP Cloud</text>
+<text x="427" y="358" font-size="16" fill="#516178" font-weight="400">Permissions · routing</text>
+<text x="427" y="383" font-size="16" fill="#516178" font-weight="400">Activity records</text>
+<path d="M685 210 V516" stroke="#ccdbef" stroke-width="2"/>
+<text x="710" y="206" font-size="17" fill="#344863" font-weight="600">PUBLIC · Cloud connects over SSH</text>
+<path d="M707 285 L762 285" stroke="#7891b6" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="722.5" y="271" font-size="14" fill="#516178" font-weight="400">SSH</text>
+<rect x="780" y="229" width="608" height="108" rx="14" fill="#f8fafc" stroke="#dce5ef"/>
+<text x="802" y="265" font-size="22" fill="#172b48" font-weight="600">Public server</text>
+<text x="802" y="297" font-size="16" fill="#516178" font-weight="400">Cloud can reach this SSH endpoint</text>
+<text x="710" y="389" font-size="17" fill="#344863" font-weight="600">PRIVATE · Your Worker connects over SSH</text>
+<path d="M704 472 L754 472" stroke="#7891b6" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="717.0" y="458" font-size="14" fill="#516178" font-weight="400">Task</text>
+<rect x="766" y="412" width="310" height="132" rx="14" fill="#f0faf5" stroke="#b8ddcf"/>
+<text x="788" y="448" font-size="22" fill="#172b48" font-weight="600">Your local Worker</text>
+<text x="788" y="480" font-size="16" fill="#516178" font-weight="400">Your computer, NAS or LAN host</text>
+<text x="788" y="505" font-size="16" fill="#516178" font-weight="400">Initiates connection to Cloud</text>
+<path d="M1085 472 L1135 472" stroke="#7891b6" stroke-width="2" marker-end="url(#arrow)"/>
+<text x="1098.0" y="458" font-size="14" fill="#516178" font-weight="400">SSH</text>
+<rect x="1152" y="412" width="236" height="132" rx="14" fill="#f8fafc" stroke="#dce5ef"/>
+<text x="1174" y="448" font-size="22" fill="#172b48" font-weight="600">Private server</text>
+<text x="1174" y="480" font-size="16" fill="#516178" font-weight="400">Reachable by Worker</text>
+<text x="1174" y="505" font-size="16" fill="#516178" font-weight="400">No public SSH needed</text>
+<text x="40" y="582" font-size="19" fill="#516178" font-weight="400">Results return to AI. You choose which servers and operations it may access.</text>
+<path d="M40 617 H1400" stroke="#dce5ef"/>
+<text x="40" y="653" font-size="19" fill="#235bc1" font-weight="600">1  Choose a route</text>
+<text x="40" y="688" font-size="16" fill="#516178" font-weight="400">Public Cloud or private Worker</text>
+<text x="386" y="653" font-size="19" fill="#235bc1" font-weight="600">2  Install key and test</text>
+<text x="386" y="688" font-size="16" fill="#516178" font-weight="400">Run setup on the target server</text>
+<text x="732" y="653" font-size="19" fill="#235bc1" font-weight="600">3  Authorize your client</text>
+<text x="732" y="688" font-size="16" fill="#516178" font-weight="400">OAuth or scoped credentials</text>
+<text x="1078" y="653" font-size="19" fill="#235bc1" font-weight="600">4  Start a task</text>
+<text x="1078" y="688" font-size="16" fill="#516178" font-weight="400">Choose a server; verify the result</text>
+<rect x="40" y="724" width="1360" height="56" rx="10" fill="#f5f8fc"/>
+<text x="57" y="759" font-size="18" fill="#516178" font-weight="400">The browser can close. Keep Cloud and your Worker online. Targets need SSH, not an MCP daemon.</text>
+</g></svg>

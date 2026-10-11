@@ -350,15 +350,19 @@ Docker uses only a dedicated data volume; it does not require privileged mode, t
 docker build -t sshmcp-worker:0.3.0 \
   https://github.com/sshmcp/sshmcp.git#feat/v0.4-execution-locations
 docker volume create sshmcp-worker-data
-docker run --rm \
+docker run --rm --network host \
   -e SSHMCP_ENROLLMENT_TOKEN='smce_replace_with_the_one_time_value' \
   -v sshmcp-worker-data:/var/lib/sshmcp \
   sshmcp-worker:0.3.0 worker enroll --cloud https://sshmcp.example \
   --name 'Home Network' --data-dir /var/lib/sshmcp
-docker run -d --name sshmcp-worker --restart unless-stopped \
+docker run -d --network host --name sshmcp-worker --restart unless-stopped \
   -v sshmcp-worker-data:/var/lib/sshmcp \
   sshmcp-worker:0.3.0 worker run --data-dir /var/lib/sshmcp
 ```
+
+The default Worker commands use host networking. On Linux, `127.0.0.1` reaches the Docker host; use a LAN address to connect another machine. Bridge networking can reach ordinary LAN addresses, but its loopback address refers to the container. Docker Desktop 4.34 or newer requires **Settings → Resources → Network → Enable host networking** and a restart. No published inbound port is needed.
+
+To uninstall this Docker Worker, first revoke its access in Cloud, then run `docker rm -f sshmcp-worker` on its host. The data volume is retained for reinstalling. To permanently remove that Worker's identity and execution journal, also run `docker volume rm sshmcp-worker-data`; a fresh enrollment is required afterward. For a Linux/WSL installation, stop `worker run` or its service before removing the dedicated data directory. Keep shared binaries and images if other Workers use them. Delete the private connection from Cloud after moving or removing its linked servers.
 
 Use `sshmcp worker status --data-dir /var/lib/sshmcp` for the enrolled identity and journal counts. Revoking a Worker in Cloud rejects future connections and jobs; it cannot undo a remote action that may already have started. If the connection is lost after a start grant, Cloud reports the execution as `unknown` and does not replay it automatically.
 
